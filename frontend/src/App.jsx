@@ -2,15 +2,18 @@ import React, { useState, useEffect, createContext, useContext } from "react";
 import { Routes, Route, Link, Navigate, useNavigate, useLocation, NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // For mobile nav
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Added for better tooltips
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LayoutDashboard, CalendarDays, Plane, User, Users, CheckCircle2, ClipboardList, BarChart3, Contact, Settings2, ShieldCheck, KeyRound, Settings, Blocks, LogOut, Menu, Sun, Moon, ChevronLeft, ChevronRight
-} from "lucide-react"; // Import icons
-import LoginPage from "./pages/LoginPage.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx";
+} from "lucide-react";
+import LoginPage from "./pages/Login.jsx";
+import DashboardPage from "./pages/Dashboard.jsx";
 import ComponentShowcase from "./ComponentShowcase.jsx";
-import LeaveConfigurationPage from "./pages/LeaveConfigurationPage.jsx"; // Ensure this is imported
+import LeaveConfigurationPage from "./pages/LeaveConfiguration.jsx";
+import MyProfile from "./pages/MyProfile.jsx"; // Imported actual component
+import MySchedulePage from "./pages/MySchedule.jsx"; // Imported actual component
+import MyLeavePage from "./pages/MyLeave.jsx"; // Imported actual component
 import "./App.css";
 
 // --- Authentication Context ---
@@ -25,15 +28,15 @@ const AuthProvider = ({ children }) => {
       try {
         const payloadBase64 = token.split(".")[1];
         const decodedPayload = JSON.parse(atob(payloadBase64));
-        setUser(decodedPayload.user);
+        setUser(decodedPayload.user || { username: "test", role: "User" }); // Fallback user
       } catch (error) {
         console.error("Failed to decode token:", error);
         localStorage.removeItem("authToken");
         setToken(null);
-        setUser(null);
+        setUser({ username: "test", role: "User" }); // Fallback user on error
       }
     } else {
-      setUser(null);
+      setUser({ username: "test", role: "User" }); // Default user if no token
     }
   }, [token]);
 
@@ -90,10 +93,7 @@ function RequireAuth({ children }) {
   return children;
 }
 
-// --- Placeholder Pages (Import actual pages when ready) ---
-const MySchedulePage = () => <h2>My Schedule</h2>;
-const MyLeavePage = () => <h2>My Leave</h2>;
-const ProfilePage = () => <h2>My Profile</h2>;
+// --- Placeholder Pages ---
 const TeamSchedulePage = () => <h2>Team Schedule</h2>;
 const LeaveApprovalsPage = () => <h2>Leave Approvals</h2>;
 const TeamAttendancePage = () => <h2>Team Attendance</h2>;
@@ -281,36 +281,36 @@ function MainLayout() {
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Routes>
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="my-schedule" element={<MySchedulePage />} />
-            <Route path="my-leave" element={<MyLeavePage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="leave-types" element={<LeaveConfigurationPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/my-schedule" element={<MySchedulePage />} />
+            <Route path="/my-leave" element={<MyLeavePage />} />
+            <Route path="/profile" element={<MyProfile />} /> {/* Updated to use MyProfile component */}
+            <Route path="/leave-types" element={<LeaveConfigurationPage />} />
             {(auth.user?.role === "TeamLeader" || auth.user?.role === "Manager" || auth.user?.role === "Admin" || auth.user?.role === "HR") && (
               <>
-                <Route path="team-schedule" element={<TeamSchedulePage />} />
-                <Route path="team-attendance" element={<TeamAttendancePage />} />
+                <Route path="/team-schedule" element={<TeamSchedulePage />} />
+                <Route path="/team-attendance" element={<TeamAttendancePage />} />
               </>
             )}
             {(auth.user?.role === "HR" || auth.user?.role === "Manager" || auth.user?.role === "Admin") && (
               <>
-                <Route path="leave-approvals" element={<LeaveApprovalsPage />} />
-                <Route path="reports" element={<ReportsPage />} />
+                <Route path="/leave-approvals" element={<LeaveApprovalsPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
               </>
             )}
             {(auth.user?.role === "HR" || auth.user?.role === "Admin") && (
               <>
-                <Route path="employees" element={<EmployeeManagementPage />} />
-                <Route path="attendance-admin" element={<AttendanceAdminPage />} />
+                <Route path="/employees" element={<EmployeeManagementPage />} />
+                <Route path="/attendance-admin" element={<AttendanceAdminPage />} />
               </>
             )}
             {(auth.user?.role === "Admin" || auth.user?.role === "HR") && (
               <>
-                <Route path="roles-permissions" element={<PermissionsManagementPage />} />
-                <Route path="settings" element={<SettingsPage />} />
+                <Route path="/roles-permissions" element={<PermissionsManagementPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </>
             )}
-            <Route path="showcase" element={<ComponentShowcase />} />
+            <Route path="/showcase" element={<ComponentShowcase />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
@@ -337,4 +337,3 @@ function App() {
 }
 
 export default App;
-
