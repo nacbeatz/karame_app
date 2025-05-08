@@ -10,6 +10,7 @@ const leaveTypeRoutes = require("./routes/leaveTypes"); // Import leave type rou
 const connectDB = require("./config/db"); // Import the database connection function
 // const ZKJubaer = require("zk-jubaer");
 
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {

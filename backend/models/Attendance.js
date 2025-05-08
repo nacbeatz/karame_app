@@ -22,7 +22,7 @@ const attendanceSchema = new mongoose.Schema({
     timestamps: true // Adds createdAt and updatedAt fields automatically
 });
 
-const Attendance = mongoose.model("Attendance", attendanceSchema);
+const Attendance = mongoose.model("Attendance", attendanceSchema, "attendance");
 
 module.exports = Attendance;
 
