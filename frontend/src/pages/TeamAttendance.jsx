@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, ListChecks, AlertTriangle, CalendarSearch } from 'lucide-react';
 
-function TeamAttendancePage() {
+function TeamAttendance() {
   // Placeholder for actual team attendance data and logic
   const teamAttendanceSummary = {
     onTime: 10,
@@ -102,5 +102,5 @@ function TeamAttendancePage() {
   );
 }
 
-export default TeamAttendancePage;
+export default TeamAttendance;
 

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Search, Edit, Trash2 } from 'lucide-react';
 
-function EmployeesPage() {
+function Employees() {
   // Placeholder for actual employee data and logic
   const employees = [
     { id: "EMP001", name: "John Doe", role: "Doctor", department: "Cardiology", status: "Active" },
@@ -82,5 +82,5 @@ function EmployeesPage() {
   );
 }
 
-export default EmployeesPage;
+export default Employees;
 

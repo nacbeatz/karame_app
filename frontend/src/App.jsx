@@ -5,15 +5,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  LayoutDashboard, CalendarDays, Plane, User, Users, CheckCircle2, ClipboardList, BarChart3, Contact, Settings2, ShieldCheck, KeyRound, Settings, Blocks, LogOut, Menu, Sun, Moon, ChevronLeft, ChevronRight
+  LayoutDashboard, CalendarDays, Plane, User, Users, CheckCircle2, ClipboardList, BarChart3, Contact, Settings2, ShieldCheck, KeyRound, Settings as SettingsIcon, Blocks, LogOut, Menu, Sun, Moon, ChevronLeft, ChevronRight
 } from "lucide-react";
-import LoginPage from "./pages/Login.jsx";
-import DashboardPage from "./pages/Dashboard.jsx";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import ComponentShowcase from "./ComponentShowcase.jsx";
-import LeaveConfigurationPage from "./pages/LeaveConfiguration.jsx";
-import MyProfile from "./pages/MyProfile.jsx"; // Imported actual component
-import MySchedulePage from "./pages/MySchedule.jsx"; // Imported actual component
-import MyLeavePage from "./pages/MyLeave.jsx"; // Imported actual component
+import MyProfile from "./pages/MyProfile.jsx";
+import MySchedule from "./pages/MySchedule.jsx";
+import MyLeave from "./pages/MyLeave.jsx";
+import TeamSchedule from "./pages/TeamSchedule.jsx";
+import LeaveApprovals from "./pages/LeaveApprovals.jsx";
+import TeamAttendance from "./pages/TeamAttendance.jsx";
+import Reports from "./pages/Reports.jsx";
+import Employees from "./pages/Employees.jsx";
+import LeaveConfiguration from "./pages/LeaveConfiguration.jsx";
+import AttendanceAdmin from "./pages/AttendanceAdmin.jsx";
+import Permissions from "./pages/Permissions.jsx";
+import Settings from "./pages/Settings.jsx";
 import "./App.css";
 
 // --- Authentication Context ---
@@ -93,16 +101,6 @@ function RequireAuth({ children }) {
   return children;
 }
 
-// --- Placeholder Pages ---
-const TeamSchedulePage = () => <h2>Team Schedule</h2>;
-const LeaveApprovalsPage = () => <h2>Leave Approvals</h2>;
-const TeamAttendancePage = () => <h2>Team Attendance</h2>;
-const ReportsPage = () => <h2>Reports</h2>;
-const EmployeeManagementPage = () => <h2>Employee Management</h2>;
-const PermissionsManagementPage = () => <h2>Permissions Management</h2>;
-const AttendanceAdminPage = () => <h2>Attendance Admin</h2>;
-const SettingsPage = () => <h2>System Settings</h2>;
-
 // --- Navigation Links Configuration ---
 const navLinkConfig = {
   common: [
@@ -124,7 +122,7 @@ const navLinkConfig = {
   ],
   admin: [
     { path: "/roles-permissions", label: "Permissions", icon: KeyRound },
-    { path: "/settings", label: "Settings", icon: Settings },
+    { path: "/settings", label: "Settings", icon: SettingsIcon }, // Updated to use SettingsIcon
   ],
   development: [
     { path: "/showcase", label: "Component Showcase", icon: Blocks },
@@ -281,33 +279,33 @@ function MainLayout() {
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           <Routes>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/my-schedule" element={<MySchedulePage />} />
-            <Route path="/my-leave" element={<MyLeavePage />} />
-            <Route path="/profile" element={<MyProfile />} /> {/* Updated to use MyProfile component */}
-            <Route path="/leave-types" element={<LeaveConfigurationPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/my-schedule" element={<MySchedule />} />
+            <Route path="/my-leave" element={<MyLeave />} />
+            <Route path="/profile" element={<MyProfile />} />
+            <Route path="/leave-types" element={<LeaveConfiguration />} />
             {(auth.user?.role === "TeamLeader" || auth.user?.role === "Manager" || auth.user?.role === "Admin" || auth.user?.role === "HR") && (
               <>
-                <Route path="/team-schedule" element={<TeamSchedulePage />} />
-                <Route path="/team-attendance" element={<TeamAttendancePage />} />
+                <Route path="/team-schedule" element={<TeamSchedule />} />
+                <Route path="/team-attendance" element={<TeamAttendance />} />
               </>
             )}
             {(auth.user?.role === "HR" || auth.user?.role === "Manager" || auth.user?.role === "Admin") && (
               <>
-                <Route path="/leave-approvals" element={<LeaveApprovalsPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/leave-approvals" element={<LeaveApprovals />} />
+                <Route path="/reports" element={<Reports />} />
               </>
             )}
             {(auth.user?.role === "HR" || auth.user?.role === "Admin") && (
               <>
-                <Route path="/employees" element={<EmployeeManagementPage />} />
-                <Route path="/attendance-admin" element={<AttendanceAdminPage />} />
+                <Route path="/employees" element={<Employees />} />
+                <Route path="/attendance-admin" element={<AttendanceAdmin />} />
               </>
             )}
             {(auth.user?.role === "Admin" || auth.user?.role === "HR") && (
               <>
-                <Route path="/roles-permissions" element={<PermissionsManagementPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/roles-permissions" element={<Permissions />} />
+                <Route path="/settings" element={<Settings />} />
               </>
             )}
             <Route path="/showcase" element={<ComponentShowcase />} />
@@ -325,7 +323,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/*"
             element={<RequireAuth><MainLayout /></RequireAuth>}

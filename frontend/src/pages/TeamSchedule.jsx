@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Users, CalendarClock, Filter, PlusCircle } from 'lucide-react';
 
-function TeamSchedulePage() {
+function TeamSchedule() {
   // Placeholder for actual team schedule data and logic
   const teamMembers = [
     { id: 1, name: "Alice Johnson", shift: "08:00 - 16:00", department: "Cardiology" },
@@ -60,5 +60,5 @@ function TeamSchedulePage() {
   );
 }
 
-export default TeamSchedulePage;
+export default TeamSchedule;
 

@@ -16,26 +16,24 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose, // Import DialogClose
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/toast"; // Assuming useToast is set up
 
 // Helper hook to get auth token (replace with actual context)
 const useAuth = () => {
   return { token: localStorage.getItem("authToken") };
 };
 
-function LeaveConfigurationPage() {
+function LeaveConfiguration() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentLeaveType, setCurrentLeaveType] = useState(null); // For editing
   const [formData, setFormData] = useState({ name: '', description: '' });
-  const { toast } = useToast(); // Initialize toast
   const { token } = useAuth();
 
   const API_URL = 'http://localhost:3001/api/leave-types'; // Adjust if needed
@@ -58,11 +56,12 @@ function LeaveConfigurationPage() {
       setLeaveTypes(data);
     } catch (err) {
       setError(err.message);
-      toast({ title: "Error", description: `Failed to fetch leave types: ${err.message}`, variant: "destructive" });
+      // Removed toast call, using console for now
+      console.error(`Failed to fetch leave types: ${err.message}`);
     } finally {
       setLoading(false);
     }
-  }, [API_URL, toast]); // Removed token dependency for now
+  }, [API_URL]);
 
   useEffect(() => {
     fetchLeaveTypes();
@@ -99,11 +98,13 @@ function LeaveConfigurationPage() {
       setIsDialogOpen(false); // Close dialog
       setCurrentLeaveType(null); // Reset edit state
       setFormData({ name: '', description: '' }); // Reset form
-      toast({ title: "Success", description: `Leave type ${currentLeaveType ? 'updated' : 'added'} successfully.` });
+      // Removed toast call, using console for now
+      console.log(`Leave type ${currentLeaveType ? 'updated' : 'added'} successfully.`);
 
     } catch (err) {
       console.error("Submit error:", err);
-      toast({ title: "Error", description: `Failed to ${currentLeaveType ? 'update' : 'add'} leave type: ${err.message}`, variant: "destructive" });
+      // Removed toast call, using console for now
+      console.error(`Failed to ${currentLeaveType ? 'update' : 'add'} leave type: ${err.message}`);
     }
   };
 
@@ -126,11 +127,13 @@ function LeaveConfigurationPage() {
       }
 
       await fetchLeaveTypes(); // Refresh list
-      toast({ title: "Success", description: "Leave type deleted successfully." });
+      // Removed toast call, using console for now
+      console.log("Leave type deleted successfully.");
 
     } catch (err) {
       console.error("Delete error:", err);
-      toast({ title: "Error", description: `Failed to delete leave type: ${err.message}`, variant: "destructive" });
+      // Removed toast call, using console for now
+      console.error(`Failed to delete leave type: ${err.message}`);
     }
   };
 
@@ -239,5 +242,4 @@ function LeaveConfigurationPage() {
   );
 }
 
-export default LeaveConfigurationPage;
-
+export default LeaveConfiguration;

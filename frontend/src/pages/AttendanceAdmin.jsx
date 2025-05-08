@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DatabaseZap, Search, Edit, ShieldAlert, UploadCloud, DownloadCloud } from 'lucide-react';
 
-function AttendanceAdminPage() {
+function AttendanceAdmin() {
   // Placeholder for actual attendance log data and logic
   const attendanceLogs = [
     { id: "LOG001", employeeName: "John Doe", date: "2025-05-07", clockIn: "08:58", clockOut: "17:02", status: "Present", anomaly: "None" },
@@ -100,5 +100,5 @@ function AttendanceAdminPage() {
   );
 }
 
-export default AttendanceAdminPage;
+export default AttendanceAdmin;
 

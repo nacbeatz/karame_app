@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plane, History, PlusCircle } from 'lucide-react';
 
-function MyLeavePage() {
+function MyLeave() {
   // Placeholder for actual leave data and logic
   const leaveBalances = [
     { type: "Annual Leave", balance: 12, unit: "days" },
@@ -16,6 +16,9 @@ function MyLeavePage() {
     { id: 2, type: "Sick Leave", startDate: "2025-05-20", endDate: "2025-05-20", status: "Pending" },
     { id: 3, type: "Annual Leave", startDate: "2025-07-01", endDate: "2025-07-05", status: "Rejected" },
   ];
+
+  // Debug log to confirm component is rendering
+  console.log("MyLeave component mounted");
 
   return (
     <div className="space-y-6">
@@ -81,10 +84,8 @@ function MyLeavePage() {
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }
 
-export default MyLeavePage;
-
+export default MyLeave;

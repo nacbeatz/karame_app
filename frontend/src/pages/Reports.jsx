@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { BarChartBig, FileText, Download, Filter } from 'lucide-react';
 
-function ReportsPage() {
+function Reports() {
   // Placeholder for actual report data and generation logic
   const availableReports = [
     { id: 1, name: "Monthly Attendance Summary", description: "Overall attendance statistics for the selected month." },
@@ -68,5 +68,5 @@ function ReportsPage() {
   );
 }
 
-export default ReportsPage;
+export default Reports;
 

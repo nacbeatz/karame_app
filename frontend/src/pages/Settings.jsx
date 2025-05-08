@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings as SettingsIcon, Bell, Palette, ShieldLock, Clock } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Palette, Lock, Clock } from 'lucide-react';
 
-function SettingsPage() {
+function Settings() {
   // Placeholder for actual settings data and logic
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [darkMode, setDarkMode] = React.useState(false);
@@ -74,7 +74,7 @@ function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center"><ShieldLock className="mr-2 h-5 w-5" /> Security & Privacy</CardTitle>
+          <CardTitle className="flex items-center"><Lock className="mr-2 h-5 w-5" /> Security & Privacy</CardTitle> {/* Changed to Lock */}
           <CardDescription>Manage security settings and data privacy options.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -98,10 +98,8 @@ function SettingsPage() {
             <p className="text-muted-foreground">General settings configuration interface will be here (e.g., Hospital Name, Logo upload, Timezone select).</p>
         </CardContent>
       </Card>
-
     </div>
   );
 }
 
-export default SettingsPage;
-
+export default Settings;

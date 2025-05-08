@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Filter, ListFilter } from 'lucide-react';
 
-function LeaveApprovalsPage() {
+function LeaveApprovals() {
   // Placeholder for actual leave approval data and logic
   const pendingRequests = [
     { id: 1, employeeName: "John Smith", leaveType: "Annual Leave", startDate: "2025-06-15", endDate: "2025-06-18", reason: "Family vacation" },
@@ -78,5 +78,5 @@ function LeaveApprovalsPage() {
   );
 }
 
-export default LeaveApprovalsPage;
+export default LeaveApprovals;
 

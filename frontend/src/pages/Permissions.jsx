@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ShieldCheck, UserCog, PlusCircle, Search, Edit, Trash2 } from 'lucide-react';
 
-function PermissionsPage() {
+function Permissions() {
   // Placeholder for actual role and permission data
   const roles = [
     { id: "role_employee", name: "Employee", description: "Standard access for all employees." },
     { id: "role_team_leader", name: "Team Leader", description: "Manages team schedules and leave approvals." },
-    { id: "role_hr", name: "HR Personnel", description: "Manages employee data, leave policies, and attendance.
+    { id: "role_hr", name: "HR Personnel", description: "Manages employee data, leave policies, and attendance."},
     { id: "role_manager", name: "Manager", description: "Oversees multiple teams and has broader data access." },
     { id: "role_admin", name: "System Administrator", description: "Full system access and configuration capabilities." },
   ];
@@ -91,5 +91,5 @@ function PermissionsPage() {
   );
 }
 
-export default PermissionsPage;
+export default Permissions;
 
