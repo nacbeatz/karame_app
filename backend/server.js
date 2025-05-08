@@ -8,6 +8,7 @@ const Attendance = require("./models/Attendance");
 const authRoutes = require("./routes/auth");
 const leaveTypeRoutes = require("./routes/leaveTypes"); // Import leave type routes
 const connectDB = require("./config/db"); // Import the database connection function
+const attendanceRoutes = require("./routes/attendance");
 // const ZKJubaer = require("zk-jubaer");
 
 
@@ -32,6 +33,7 @@ connectDB(); // Use the new database connection logic
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/leave-types", leaveTypeRoutes); // Use leave type routes
+app.use("/api/attendance", attendanceRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {
@@ -62,6 +64,7 @@ io.on("connection", (socket) => {
 });
 
 // Placeholder for DFACE702 Integration Logic
+/*
 async function initDeviceConnection() {
     console.log("Initializing device connection (placeholder)...");
     // Simulate receiving an attendance event every 30 seconds for testing
@@ -85,10 +88,11 @@ async function initDeviceConnection() {
         }
     }, 30000);
 }
+*/
 
 // Start Server
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
-    initDeviceConnection();
+    // initDeviceConnection();
 });
 

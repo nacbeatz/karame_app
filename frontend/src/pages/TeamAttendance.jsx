@@ -1,21 +1,48 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ListChecks, AlertTriangle, CalendarSearch } from 'lucide-react';
 
 function TeamAttendance() {
-  // Placeholder for actual team attendance data and logic
-  const teamAttendanceSummary = {
-    onTime: 10,
-    late: 2,
-    absent: 1,
-    onLeave: 3,
-  };
+  const [attendance, setAttendance] = useState([]);
+  const [summary, setSummary] = useState({ onTime: 0, late: 0, absent: 0, onLeave: 0 });
+  const [anomalies, setAnomalies] = useState([]);
 
-  const recentAnomalies = [
-    { id: 1, employeeName: "Eve Adams", type: "Late Clock-in", time: "09:17 AM", details: "Clocked in 17 minutes late" },
-    { id: 2, employeeName: "Frank Miller", type: "Missed Clock-out", date: "2025-05-06", details: "No clock-out recorded for yesterday's shift" },
-  ];
+  useEffect(() => {
+    fetch('/api/attendance')
+      .then(res => res.json())
+      .then(data => {
+        setAttendance(data);
+        // Show all records for February 2025
+        const month = "2025-02";
+        let onTime = 0, late = 0, absent = 0, onLeave = 0;
+        let anomalyList = [];
+
+        data.forEach((record) => {
+          const recordDate = record.timestamp.slice(0, 7); // "YYYY-MM"
+          if (recordDate === month) {
+            if (record.type === "clock-in") {
+              const hour = new Date(record.timestamp).getHours();
+              if (hour <= 9) onTime++;
+              else late++;
+              // Example anomaly: late clock-in after 9:00
+              if (hour > 9) {
+                anomalyList.push({
+                  employeeName: record.userId,
+                  type: "Late Clock-in",
+                  time: new Date(record.timestamp).toLocaleTimeString(),
+                  details: `Clocked in late (${new Date(record.timestamp).toLocaleTimeString()})`
+                });
+              }
+            }
+            // You can add more logic for absent, onLeave, missed clock-out, etc.
+          }
+        });
+
+        setSummary({ onTime, late, absent, onLeave });
+        setAnomalies(anomalyList);
+      });
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -35,26 +62,26 @@ function TeamAttendance() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Today's Attendance Summary</CardTitle>
-          <CardDescription>Overview of your team's attendance status for today.</CardDescription>
+          <CardTitle>February 2025 Attendance Summary</CardTitle>
+          <CardDescription>Overview of your team's attendance status for February 2025.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="p-4 bg-green-50 dark:bg-green-900/50">
               <CardTitle className="text-lg text-green-700 dark:text-green-300">On Time</CardTitle>
-              <p className="text-3xl font-bold text-green-800 dark:text-green-200">{teamAttendanceSummary.onTime}</p>
+              <p className="text-3xl font-bold text-green-800 dark:text-green-200">{summary.onTime}</p>
             </Card>
             <Card className="p-4 bg-yellow-50 dark:bg-yellow-900/50">
               <CardTitle className="text-lg text-yellow-700 dark:text-yellow-300">Late</CardTitle>
-              <p className="text-3xl font-bold text-yellow-800 dark:text-yellow-200">{teamAttendanceSummary.late}</p>
+              <p className="text-3xl font-bold text-yellow-800 dark:text-yellow-200">{summary.late}</p>
             </Card>
             <Card className="p-4 bg-red-50 dark:bg-red-900/50">
               <CardTitle className="text-lg text-red-700 dark:text-red-300">Absent</CardTitle>
-              <p className="text-3xl font-bold text-red-800 dark:text-red-200">{teamAttendanceSummary.absent}</p>
+              <p className="text-3xl font-bold text-red-800 dark:text-red-200">{summary.absent}</p>
             </Card>
             <Card className="p-4 bg-blue-50 dark:bg-blue-900/50">
               <CardTitle className="text-lg text-blue-700 dark:text-blue-300">On Leave</CardTitle>
-              <p className="text-3xl font-bold text-blue-800 dark:text-blue-200">{teamAttendanceSummary.onLeave}</p>
+              <p className="text-3xl font-bold text-blue-800 dark:text-blue-200">{summary.onLeave}</p>
             </Card>
           </div>
         </CardContent>
@@ -68,10 +95,10 @@ function TeamAttendance() {
           <CardDescription>Flagged attendance issues requiring attention.</CardDescription>
         </CardHeader>
         <CardContent>
-          {recentAnomalies.length > 0 ? (
+          {anomalies.length > 0 ? (
             <ul className="space-y-3">
-              {recentAnomalies.map((anomaly) => (
-                <li key={anomaly.id} className="p-3 border rounded-md flex justify-between items-center">
+              {anomalies.map((anomaly, idx) => (
+                <li key={idx} className="p-3 border rounded-md flex justify-between items-center">
                   <div>
                     <p className="font-medium">{anomaly.employeeName} - <span className="text-orange-600 dark:text-orange-400">{anomaly.type}</span></p>
                     <p className="text-sm text-muted-foreground">{anomaly.details} ({anomaly.time || anomaly.date})</p>
