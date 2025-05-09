@@ -11,7 +11,8 @@ const connectDB = require("./config/db"); // Import the database connection func
 const attendanceRoutes = require("./routes/attendance");
 // const ZKJubaer = require("zk-jubaer");
 
-
+const attendanceRoute = require("./routes/attendance");
+app.use("/api/attendance", attendanceRoute);
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
