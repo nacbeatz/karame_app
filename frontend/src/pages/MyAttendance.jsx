@@ -8,25 +8,30 @@ function MyAttendance() {
     const [summary, setSummary] = useState({ onTime: 0, late: 0, absent: 0, onLeave: 0 });
 
     useEffect(() => {
-        // Fetch only the logged-in user's attendance for the current month
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const startDate = `${year}-${month}-01`;
         const endDate = `${year}-${month}-31`;
+
         fetch(`/api/attendance?startDate=${startDate}&endDate=${endDate}&limit=1000`)
             .then(res => res.json())
             .then(data => {
                 const records = Array.isArray(data) ? data : data.logs;
                 let onTime = 0, late = 0, absent = 0, onLeave = 0;
+
                 records.forEach((record) => {
                     if (record.type === "clock-in") {
                         const hour = new Date(record.timestamp).getHours();
                         if (hour <= 9) onTime++;
                         else late++;
+                    } else if (record.type === "absent") {
+                        absent++;
+                    } else if (record.type === "on-leave") {
+                        onLeave++;
                     }
-                    // Add logic for absent and onLeave if you have such records/types
                 });
+
                 setAttendance(records);
                 setSummary({ onTime, late, absent, onLeave });
             });
@@ -37,7 +42,7 @@ function MyAttendance() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight flex items-center">
-                        <ListChecks className="mr-3 h-8 w-8" /> My Attendance
+                        <ListChecks className="mr-3 h-8 w-8" /> My Attendances
                     </h1>
                     <p className="text-muted-foreground">
                         View your attendance summary and history for this month.
@@ -102,4 +107,4 @@ function MyAttendance() {
     );
 }
 
-export default MyAttendance; 
+export default MyAttendance;

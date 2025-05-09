@@ -95,46 +95,23 @@ router.post("/clock-out", authenticateToken, async (req, res) => {
 
 // GET /api/attendance - Get attendance logs
 router.get("/", authenticateToken, async (req, res) => {
-    const { employeeId, startDate, endDate, page = 1, limit = 20 } = req.query;
+    const { startDate, endDate, page = 1, limit = 20 } = req.query;
     const loggedInUser = req.user;
-    let query = {};
 
-    if (loggedInUser.role === "Employee") {
-        query.userId = loggedInUser.id;
-    } else if (loggedInUser.role === "TeamLeader" || loggedInUser.role === "Manager") {
-        // Managers/Leaders can see their team's attendance or specific employee if in their team
-        const managedUsers = await User.find({ manager: loggedInUser.id }).select("_id");
-        const managedUserIds = managedUsers.map(u => u._id);
-        if (employeeId) {
-            if (!managedUserIds.some(id => id.equals(employeeId)) && employeeId !== loggedInUser.id) {
-                return res.status(403).json({ msg: "Access denied to view this employee's attendance." });
-            }
-            query.userId = employeeId;
-        } else {
-            query.userId = { $in: [...managedUserIds, loggedInUser.id] }; // Include self
-        }
-    } else if (loggedInUser.role === "Admin" || loggedInUser.role === "HR") {
-        if (employeeId) {
-            query.userId = employeeId;
-        }
-        // Admin/HR can see all if no employeeId specified
-    } else {
-        return res.status(403).json({ msg: "Access denied." });
-    }
+    let query = { No: loggedInUser.No }; // Use the No field to filter attendance records
 
     if (startDate || endDate) {
-        query.timestamp = {};
-        if (startDate) query.timestamp.$gte = new Date(startDate);
-        if (endDate) query.timestamp.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999)); // Include whole end day
+        query.Date = {};
+        if (startDate) query.Date.$gte = startDate;
+        if (endDate) query.Date.$lte = endDate;
     }
 
     try {
         const logs = await Attendance.find(query)
-            .populate("userId", "firstName lastName employeeId username")
-            .sort({ timestamp: -1 })
+            .sort({ Date: -1 })
             .limit(parseInt(limit))
             .skip((parseInt(page) - 1) * parseInt(limit));
-        
+
         const total = await Attendance.countDocuments(query);
 
         res.json({
@@ -162,7 +139,7 @@ router.put("/:logId", [authenticateToken, authorizeRole(["Admin", "HR"])], async
         if (type) log.type = type;
         if (notes !== undefined) log.notes = notes;
         if (userId) log.userId = userId; // Allow changing user if correcting error
-        
+
         log.isManualEntry = true;
         log.manualEntryReason = manualEntryReason || "Edited by Admin/HR";
 
@@ -200,11 +177,12 @@ router.get("/summary/daily", [authenticateToken, authorizeRole(["Admin", "HR", "
         const attendanceToday = await Attendance.find({
             userId: { $in: userIds },
             timestamp: { $gte: startOfDay, $lte: endOfDay },
-            type: "clock-in" // Count unique clock-ins as present
-        }).distinct("userId");
+            type: "clock-in" // Retrieve all clock-in records
+        });
 
-        const presentUsers = users.filter(u => attendanceToday.some(id => id.equals(u._id)));
-        const absentUserIds = userIds.filter(id => !attendanceToday.some(attId => attId.equals(id)));
+        // Process the attendance data as needed
+        const presentUsers = users.filter(u => attendanceToday.some(record => record.userId.equals(u._id)));
+        const absentUserIds = userIds.filter(id => !attendanceToday.some(record => record.userId.equals(id)));
         const absentUsers = users.filter(u => absentUserIds.some(id => id.equals(u._id)));
 
         res.json({
@@ -212,7 +190,8 @@ router.get("/summary/daily", [authenticateToken, authorizeRole(["Admin", "HR", "
             presentCount: presentUsers.length,
             absentCount: absentUsers.length,
             presentUsers: presentUsers.map(u => ({ id: u._id, name: `${u.firstName} ${u.lastName}`, employeeId: u.employeeId })),
-            absentUsers: absentUsers.map(u => ({ id: u._id, name: `${u.firstName} ${u.lastName}`, employeeId: u.employeeId }))
+            absentUsers: absentUsers.map(u => ({ id: u._id, name: `${u.firstName} ${u.lastName}`, employeeId: u.employeeId })),
+            attendanceRecords: attendanceToday // Include all attendance records in the response
         });
 
     } catch (err) {
