@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  LayoutDashboard, CalendarDays, Plane, User, Users, CheckCircle2, ClipboardList, BarChart3, Contact, Settings2, ShieldCheck, KeyRound, Settings as SettingsIcon, Blocks, LogOut, Menu, Sun, Moon, ChevronLeft, ChevronRight
+  LayoutDashboard, CalendarDays, Plane, User, Users, CheckCircle2, ClipboardList, BarChart3, Contact, Settings2, ShieldCheck, KeyRound, Settings as SettingsIcon, Blocks, LogOut, Menu, Sun, Moon, ChevronLeft, ChevronRight, ListChecks
 } from "lucide-react";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -22,6 +22,7 @@ import LeaveConfiguration from "./pages/LeaveConfiguration.jsx";
 import AttendanceAdmin from "./pages/AttendanceAdmin.jsx";
 import Permissions from "./pages/Permissions.jsx";
 import Settings from "./pages/Settings.jsx";
+import MyAttendance from "./pages/MyAttendance.jsx";
 import "./App.css";
 
 // --- Authentication Context ---
@@ -107,6 +108,7 @@ const navLinkConfig = {
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/my-schedule", label: "My Schedule", icon: CalendarDays },
     { path: "/my-leave", label: "My Leave", icon: Plane },
+    { path: "/my-attendance", label: "My Attendance", icon: ListChecks },
     { path: "/profile", label: "My Profile", icon: User },
   ],
   leaderManager: [
@@ -282,6 +284,7 @@ function MainLayout() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/my-schedule" element={<MySchedule />} />
             <Route path="/my-leave" element={<MyLeave />} />
+            <Route path="/my-attendance" element={<MyAttendance />} />
             <Route path="/profile" element={<MyProfile />} />
             <Route path="/leave-types" element={<LeaveConfiguration />} />
             {(auth.user?.role === "TeamLeader" || auth.user?.role === "Manager" || auth.user?.role === "Admin" || auth.user?.role === "HR") && (

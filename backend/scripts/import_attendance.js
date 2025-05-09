@@ -6,6 +6,9 @@
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const Attendance = require("../models/Attendance");
+const User = require("../models/User");
+const connectDB = require("../config/db");
 
 // Update this to your Atlas connection string or use process.env.MONGO_URI
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://hospital:hospital_app@cluster0.iy79buv.mongodb.net/hospital_app';
@@ -13,33 +16,40 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://hospital:hospital_app@
 // Path to your original JSON file
 const DATA_PATH = path.join(__dirname, '../models/February_2025_Attendance.json');
 
-// Attendance schema fields
-const attendanceSchema = new mongoose.Schema({
-    userId: String,
-    timestamp: Date,
-    type: String,
-}, { timestamps: true });
-
-const Attendance = mongoose.model('Attendance', attendanceSchema, 'attendance');
-
 function parseTimestamp(dateStr, timeStr) {
-    if (!dateStr || !timeStr || timeStr === 'null') return null;
+    if (!dateStr || !timeStr || timeStr === 'null' || timeStr === 'nan') return null;
     // Combine date and time, assume local time, convert to ISO
     return new Date(`${dateStr}T${timeStr.length === 5 ? timeStr + ':00' : timeStr}`);
 }
 
 async function importData() {
     await mongoose.connect(MONGO_URI);
+    // Drop all existing attendance records before import
+    await Attendance.deleteMany({});
     const raw = fs.readFileSync(DATA_PATH, 'utf-8');
     const records = JSON.parse(raw);
     const docs = [];
+    const unmatchedNames = new Set();
 
     for (const rec of records) {
+        // Robustly split and trim name
+        const name = rec.Name.trim().replace(/\s+/g, ' ');
+        const [firstName, ...lastNameParts] = name.split(' ');
+        const lastName = lastNameParts.join(' ');
+        // Find user (case-insensitive, trimmed)
+        const user = await User.findOne({
+            firstName: new RegExp(`^${firstName.trim()}$`, 'i'),
+            lastName: new RegExp(`^${lastName.trim()}$`, 'i')
+        });
+        if (!user) {
+            unmatchedNames.add(name);
+            continue;
+        }
         // Clock-in
         const clockInTime = parseTimestamp(rec.Date, rec.AM_In);
         if (clockInTime) {
             docs.push({
-                userId: rec.Name,
+                userId: user._id,
                 timestamp: clockInTime,
                 type: 'clock-in',
             });
@@ -48,7 +58,7 @@ async function importData() {
         const clockOutTime = parseTimestamp(rec.Date, rec.AM_Out);
         if (clockOutTime) {
             docs.push({
-                userId: rec.Name,
+                userId: user._id,
                 timestamp: clockOutTime,
                 type: 'clock-out',
             });
@@ -57,17 +67,22 @@ async function importData() {
 
     if (docs.length === 0) {
         console.log('No valid attendance records to import.');
+        if (unmatchedNames.size > 0) {
+            console.log('Unmatched names:', Array.from(unmatchedNames));
+        }
         process.exit(0);
     }
 
-    // Optional: Clear existing attendance data first
-    await Attendance.deleteMany({});
-
+    // Insert new attendance data
     const result = await Attendance.insertMany(docs);
     console.log(`Imported ${result.length} attendance records.`);
+    if (unmatchedNames.size > 0) {
+        console.log('Unmatched names:', Array.from(unmatchedNames));
+    }
     await mongoose.disconnect();
 }
 
+// Only run importData
 importData().catch(err => {
     console.error('Error importing attendance:', err);
     process.exit(1);

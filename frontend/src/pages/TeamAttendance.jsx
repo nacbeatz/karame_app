@@ -9,38 +9,26 @@ function TeamAttendance() {
   const [anomalies, setAnomalies] = useState([]);
 
   useEffect(() => {
-    fetch('/api/attendance')
+    fetch('/api/attendance?startDate=2025-02-01&endDate=2025-02-28&limit=1000')
       .then(res => res.json())
       .then(data => {
-        setAttendance(data);
-        // Show all records for February 2025
-        const month = "2025-02";
-        let onTime = 0, late = 0, absent = 0, onLeave = 0;
-        let anomalyList = [];
+        // If backend returns { logs: [...] }
+        const records = Array.isArray(data) ? data : data.logs;
 
-        data.forEach((record) => {
-          const recordDate = record.timestamp.slice(0, 7); // "YYYY-MM"
-          if (recordDate === month) {
-            if (record.type === "clock-in") {
-              const hour = new Date(record.timestamp).getHours();
-              if (hour <= 9) onTime++;
-              else late++;
-              // Example anomaly: late clock-in after 9:00
-              if (hour > 9) {
-                anomalyList.push({
-                  employeeName: record.userId,
-                  type: "Late Clock-in",
-                  time: new Date(record.timestamp).toLocaleTimeString(),
-                  details: `Clocked in late (${new Date(record.timestamp).toLocaleTimeString()})`
-                });
-              }
-            }
-            // You can add more logic for absent, onLeave, missed clock-out, etc.
+        let onTime = 0, late = 0, absent = 0, onLeave = 0;
+
+        records.forEach((record) => {
+          if (record.type === "clock-in") {
+            const hour = new Date(record.timestamp).getHours();
+            if (hour <= 9) onTime++;
+            else late++;
           }
+          // Add logic for absent and onLeave if you have such records/types
+          // Example: if (record.type === "absent") absent++;
+          // Example: if (record.type === "leave") onLeave++;
         });
 
         setSummary({ onTime, late, absent, onLeave });
-        setAnomalies(anomalyList);
       });
   }, []);
 
