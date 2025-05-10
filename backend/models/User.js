@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
   firstName: { type: String },
   lastName: { type: String },
   employeeId: { type: String, unique: true, sparse: true }, // Unique ID for employees
+  manager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
   // ... other fields
 }, { timestamps: true });
 

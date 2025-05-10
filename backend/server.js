@@ -9,11 +9,9 @@ const authRoutes = require("./routes/auth");
 const leaveTypeRoutes = require("./routes/leaveTypes"); // Import leave type routes
 const connectDB = require("./config/db"); // Import the database connection function
 const attendanceRoutes = require("./routes/attendance");
-// const ZKJubaer = require("zk-jubaer");
+const leaveRequestRoutes = require("./routes/leaveRequests");
 
-const attendanceRoute = require("./routes/attendance");
-app.use("/api/attendance", attendanceRoute);
-const app = express();
+const app = express(); // Initialize the app
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -34,7 +32,8 @@ connectDB(); // Use the new database connection logic
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/leave-types", leaveTypeRoutes); // Use leave type routes
-app.use("/api/attendance", attendanceRoutes);
+app.use("/api/attendance", attendanceRoutes); // Use attendance routes
+app.use("/api/leave-requests", leaveRequestRoutes);
 
 // Basic Route
 app.get("/", (req, res) => {
@@ -64,36 +63,7 @@ io.on("connection", (socket) => {
     });
 });
 
-// Placeholder for DFACE702 Integration Logic
-/*
-async function initDeviceConnection() {
-    console.log("Initializing device connection (placeholder)...");
-    // Simulate receiving an attendance event every 30 seconds for testing
-    setInterval(async () => {
-        const simulatedData = {
-            userId: `EMP${Math.floor(Math.random() * 100)}`,
-            timestamp: new Date(),
-            type: Math.random() > 0.5 ? "clock-in" : "clock-out"
-        };
-        // console.log("Simulating attendance event:", simulatedData); // Reduce noise
-        try {
-            const newAttendance = new Attendance(simulatedData);
-            await newAttendance.save();
-            // console.log("Saved simulated attendance log to DB"); // Reduce noise
-            io.emit("attendance_update", newAttendance);
-        } catch (dbError) {
-            // Avoid logging timeout errors repeatedly if DB connection is down
-            if (!dbError.message.includes("buffering timed out")) {
-                 console.error("Error saving simulated attendance log:", dbError);
-            }
-        }
-    }, 30000);
-}
-*/
-
 // Start Server
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
-    // initDeviceConnection();
 });
-

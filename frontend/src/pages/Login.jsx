@@ -48,6 +48,7 @@ function LoginPage() {
       // Login successful
       if (data.token) {
         login(data.token); // Store the token
+        console.log("Redirected to /dashboard");
         navigate('/dashboard'); // Redirect to dashboard or home page
       } else {
         setError('Login failed. No token received.');
