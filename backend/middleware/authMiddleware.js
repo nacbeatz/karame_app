@@ -14,10 +14,10 @@ const authenticateToken = (req, res, next) => {
         }
         try {
             // Attach user object from payload to request
-            // Optionally, fetch fresh user data from DB to ensure user still exists/is active
+            // Fetch fresh user data from DB to ensure user still exists
             const user = await User.findById(decoded.user.id).select("-password");
-            if (!user || !user.isActive) {
-                return res.status(403).json({ msg: "User not found or account inactive." });
+            if (!user) {
+                return res.status(403).json({ msg: "User not found." });
             }
             req.user = user; // Store full user object (excluding password)
             next();
@@ -38,4 +38,3 @@ const authorizeRole = (roles) => {
 };
 
 module.exports = { authenticateToken, authorizeRole };
-

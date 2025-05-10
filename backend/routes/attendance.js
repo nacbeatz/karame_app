@@ -31,19 +31,27 @@ router.post("/clock-in", authenticateToken, async (req, res) => {
             return res.status(403).json({ msg: "Access denied. You can only clock-in for yourself." });
         }
 
+        // Get the current date in YYYY-MM-DD format
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+
+        // Get the current time in HH:MM format
+        const hours = String(today.getHours()).padStart(2, '0');
+        const minutes = String(today.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+
+        // Create a new attendance record in the format matching your existing data
         const newAttendance = new Attendance({
-            userId: targetUserId,
-            timestamp: timestamp || new Date(), // Use provided timestamp or now
-            type: "clock-in",
-            deviceId,
-            notes,
-            isManualEntry: (loggedInUser.role === "Admin" || loggedInUser.role === "HR") && !!userId, // Mark as manual if Admin/HR provides userId
-            manualEntryReason: (loggedInUser.role === "Admin" || loggedInUser.role === "HR") && !!userId ? manualEntryReason : undefined,
+            No: userExists.employeeId || String(Math.floor(Math.random() * 1000)), // Use employeeId or generate a random number
+            Name: `${userExists.firstName} ${userExists.lastName}`,
+            Date: dateStr,
+            AM_In: timeStr,
+            AM_Out: "null", // Will be updated on clock-out
+            Remark: notes || null,
+            userId: targetUserId, // Link to the user
         });
 
         await newAttendance.save();
-        // TODO: Emit socket event for real-time update
-        // io.emit("attendance_update", newAttendance);
         res.status(201).json(newAttendance);
     } catch (err) {
         console.error("Clock-in error:", err.message);
@@ -74,51 +82,107 @@ router.post("/clock-out", authenticateToken, async (req, res) => {
             return res.status(403).json({ msg: "Access denied. You can only clock-out for yourself." });
         }
 
-        const newAttendance = new Attendance({
-            userId: targetUserId,
-            timestamp: timestamp || new Date(),
-            type: "clock-out",
-            deviceId,
-            notes,
-            isManualEntry: (loggedInUser.role === "Admin" || loggedInUser.role === "HR") && !!userId,
-            manualEntryReason: (loggedInUser.role === "Admin" || loggedInUser.role === "HR") && !!userId ? manualEntryReason : undefined,
-        });
+        // Get the current date in YYYY-MM-DD format
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
 
-        await newAttendance.save();
-        // io.emit("attendance_update", newAttendance);
-        res.status(201).json(newAttendance);
+        // Get the current time in HH:MM format
+        const hours = String(today.getHours()).padStart(2, '0');
+        const minutes = String(today.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+
+        // Find the most recent clock-in record for this user on this date
+        const existingRecord = await Attendance.findOne({
+            userId: targetUserId,
+            Date: dateStr,
+            AM_In: { $ne: "null" } // Has clocked in
+        }).sort({ _id: -1 }); // Most recent first
+
+        if (existingRecord) {
+            // Update the existing record with clock-out time
+            existingRecord.AM_Out = timeStr;
+            if (notes) {
+                existingRecord.Remark = notes;
+            }
+            await existingRecord.save();
+            res.status(200).json(existingRecord);
+        } else {
+            // No clock-in record found, create a new record with only clock-out
+            const newAttendance = new Attendance({
+                No: userExists.employeeId || String(Math.floor(Math.random() * 1000)),
+                Name: `${userExists.firstName} ${userExists.lastName}`,
+                Date: dateStr,
+                AM_In: "null", // No clock-in
+                AM_Out: timeStr,
+                Remark: notes || "Missing clock-in",
+                userId: targetUserId,
+            });
+            await newAttendance.save();
+            res.status(201).json(newAttendance);
+        }
     } catch (err) {
         console.error("Clock-out error:", err.message);
         res.status(500).send("Server Error");
     }
 });
 
-// GET /api/attendance - Get attendance logs
-router.get("/", authenticateToken, async (req, res) => {
-    const { startDate, endDate, page = 1, limit = 20 } = req.query;
-    const loggedInUser = req.user;
+// GET /api/attendance/all - Get all attendance logs (admin only)
+router.get("/all", authenticateToken, async (req, res) => {
+    console.log("req.user:", req.user); // Keep the debugging log
 
-    let query = { No: loggedInUser.No }; // Use the No field to filter attendance records
-
-    if (startDate || endDate) {
-        query.Date = {};
-        if (startDate) query.Date.$gte = startDate;
-        if (endDate) query.Date.$lte = endDate;
+    // Restore the role-based access control condition
+    if (req.user.role !== "Admin" && req.user.role !== "HR") {
+        return res.status(403).json({ msg: "Access denied. Only Admin and HR can view all attendance records." });
     }
 
     try {
-        const logs = await Attendance.find(query)
-            .sort({ Date: -1 })
-            .limit(parseInt(limit))
-            .skip((parseInt(page) - 1) * parseInt(limit));
+        // Fetch all attendance records
+        const attendanceRecords = await Attendance.find({}).sort({ timestamp: -1 });
+        res.json(attendanceRecords);
+    } catch (err) {
+        console.error("Error fetching attendance:", err.message);
+        res.status(500).json({ msg: "Server error" });
+    }
+});
 
-        const total = await Attendance.countDocuments(query);
+
+// GET /api/attendance - Get attendance logs for the current user
+router.get("/", authenticateToken, async (req, res) => {
+    const loggedInUser = req.user;
+    const { startDate, endDate } = req.query;
+
+    try {
+        // Create a query that works with both userId and Name
+        let query = {};
+
+        // If we have a userId in the record, use that
+        if (loggedInUser.id) {
+            query.$or = [
+                { userId: loggedInUser.id },
+                // Also match by name for legacy records
+                { Name: { $regex: new RegExp(`${loggedInUser.firstName}.*${loggedInUser.lastName}`, 'i') } }
+            ];
+        } else {
+            // Fallback to just name matching
+            query.Name = { $regex: new RegExp(`${loggedInUser.firstName}.*${loggedInUser.lastName}`, 'i') };
+        }
+
+        // Add date filtering if provided
+        if (startDate || endDate) {
+            query.Date = {};
+            if (startDate) query.Date.$gte = startDate;
+            if (endDate) query.Date.$lte = endDate;
+        }
+
+        // Execute the query
+        const logs = await Attendance.find(query)
+            .sort({ Date: -1 });
 
         res.json({
             logs,
-            totalPages: Math.ceil(total / limit),
-            currentPage: parseInt(page),
-            totalLogs: total
+            totalPages: 1,
+            currentPage: 1,
+            totalLogs: logs.length
         });
     } catch (err) {
         console.error("Error fetching attendance logs:", err.message);
@@ -128,20 +192,20 @@ router.get("/", authenticateToken, async (req, res) => {
 
 // PUT /api/attendance/:logId - Manually edit an attendance log
 router.put("/:logId", [authenticateToken, authorizeRole(["Admin", "HR"])], async (req, res) => {
-    const { timestamp, type, notes, manualEntryReason, userId } = req.body;
+    const { AM_In, AM_Out, Date, Remark, userId, Name } = req.body;
     try {
         let log = await Attendance.findById(req.params.logId);
         if (!log) {
             return res.status(404).json({ msg: "Attendance log not found" });
         }
 
-        if (timestamp) log.timestamp = timestamp;
-        if (type) log.type = type;
-        if (notes !== undefined) log.notes = notes;
-        if (userId) log.userId = userId; // Allow changing user if correcting error
-
-        log.isManualEntry = true;
-        log.manualEntryReason = manualEntryReason || "Edited by Admin/HR";
+        // Update fields if provided
+        if (AM_In !== undefined) log.AM_In = AM_In;
+        if (AM_Out !== undefined) log.AM_Out = AM_Out;
+        if (Date !== undefined) log.Date = Date;
+        if (Remark !== undefined) log.Remark = Remark;
+        if (userId !== undefined) log.userId = userId;
+        if (Name !== undefined) log.Name = Name;
 
         await log.save();
         res.json(log);
@@ -151,14 +215,26 @@ router.put("/:logId", [authenticateToken, authorizeRole(["Admin", "HR"])], async
     }
 });
 
-// --- Reporting Endpoints (Examples based on API design) ---
+// DELETE /api/attendance/:logId - Delete an attendance log
+router.delete("/:logId", [authenticateToken, authorizeRole(["Admin", "HR"])], async (req, res) => {
+    try {
+        const log = await Attendance.findById(req.params.logId);
+        if (!log) {
+            return res.status(404).json({ msg: "Attendance log not found" });
+        }
+
+        await log.remove();
+        res.json({ msg: "Attendance log deleted" });
+    } catch (err) {
+        console.error("Error deleting attendance log:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
 
 // GET /api/attendance/summary/daily - Get daily attendance summary
 router.get("/summary/daily", [authenticateToken, authorizeRole(["Admin", "HR", "Manager", "TeamLeader"])], async (req, res) => {
-    const { date, department, teamId } = req.query; // teamId might require User model to have team field
-    const targetDate = date ? new Date(date) : new Date();
-    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+    const { date, department } = req.query;
+    const targetDate = date ? date : new Date().toISOString().split('T')[0];
 
     let userQuery = {};
     if (req.user.role === "Manager" || req.user.role === "TeamLeader") {
@@ -168,25 +244,47 @@ router.get("/summary/daily", [authenticateToken, authorizeRole(["Admin", "HR", "
     if (department && (req.user.role === "Admin" || req.user.role === "HR")) {
         userQuery.department = department;
     }
-    // Add teamId filter if User model supports it and user has access
 
     try {
         const users = await User.find(userQuery).select("_id firstName lastName employeeId");
         const userIds = users.map(u => u._id);
+        const userNames = users.map(u => new RegExp(`${u.firstName}.*${u.lastName}`, 'i'));
 
-        const attendanceToday = await Attendance.find({
-            userId: { $in: userIds },
-            timestamp: { $gte: startOfDay, $lte: endOfDay },
-            type: "clock-in" // Retrieve all clock-in records
+        // Find attendance records for the target date
+        const attendanceRecords = await Attendance.find({
+            $or: [
+                { userId: { $in: userIds } },
+                { Name: { $in: userNames } }
+            ],
+            Date: targetDate
         });
 
-        // Process the attendance data as needed
-        const presentUsers = users.filter(u => attendanceToday.some(record => record.userId.equals(u._id)));
-        const absentUserIds = userIds.filter(id => !attendanceToday.some(record => record.userId.equals(id)));
-        const absentUsers = users.filter(u => absentUserIds.some(id => id.equals(u._id)));
+        // Process the records to determine who is present/absent
+        const presentUserIds = new Set();
+        const presentUserNames = new Set();
+
+        attendanceRecords.forEach(record => {
+            if (record.AM_In && record.AM_In !== "null") {
+                if (record.userId) {
+                    presentUserIds.add(record.userId.toString());
+                } else {
+                    presentUserNames.add(record.Name.toLowerCase());
+                }
+            }
+        });
+
+        const presentUsers = users.filter(u =>
+            presentUserIds.has(u._id.toString()) ||
+            presentUserNames.has(`${u.firstName} ${u.lastName}`.toLowerCase())
+        );
+
+        const absentUsers = users.filter(u =>
+            !presentUserIds.has(u._id.toString()) &&
+            !presentUserNames.has(`${u.firstName} ${u.lastName}`.toLowerCase())
+        );
 
         res.json({
-            date: startOfDay.toISOString().split("T")[0],
+            date: targetDate,
             presentCount: presentUsers.length,
             absentCount: absentUsers.length,
             presentUsers: presentUsers.map(u => ({ id: u._id, name: `${u.firstName} ${u.lastName}`, employeeId: u.employeeId })),
@@ -200,7 +298,4 @@ router.get("/summary/daily", [authenticateToken, authorizeRole(["Admin", "HR", "
     }
 });
 
-// More reporting endpoints (monthly-hours, supplementary-hours, absenteeism) would follow a similar pattern of aggregation.
-
 module.exports = router;
-

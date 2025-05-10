@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User"); // Adjust path if needed
+const { authenticateToken } = require("../middleware/authMiddleware"); // Import the middleware
 
 const router = express.Router();
 
@@ -97,13 +98,26 @@ router.post("/register", async (req, res) => {
         res.json({ msg: "User registered successfully" }); // Or just send success message
       }
     );
-
   } catch (err) {
     console.error("Registration error:", err.message);
     res.status(500).send("Server error");
   }
 });
 
+// @route   GET /api/auth/me
+// @desc    Get current user
+// @access  Private
+router.get("/me", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error("Error fetching current user:", err.message);
+    res.status(500).send("Server Error");
+  }
+});
 
 module.exports = router;
-
