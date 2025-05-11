@@ -107,7 +107,6 @@ const navLinkConfig = {
   common: [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/my-schedule", label: "My Schedule", icon: CalendarDays },
-    { path: "/my-leave", label: "My Leave", icon: Plane },
     { path: "/my-attendance", label: "My Attendance", icon: ListChecks },
     { path: "/profile", label: "My Profile", icon: User },
   ],
@@ -119,11 +118,11 @@ const navLinkConfig = {
   ],
   hrAdmin: [
     { path: "/employees", label: "Employees", icon: Contact },
-    { path: "/leave-types", label: "Leave Config", icon: Settings2 },
     { path: "/attendance-admin", label: "Attendance Admin", icon: ShieldCheck },
   ],
   admin: [
     { path: "/roles-permissions", label: "Permissions", icon: KeyRound },
+    { path: "/leave-types", label: "Leave Config", icon: Settings2 },
     { path: "/settings", label: "Settings", icon: SettingsIcon }, // Updated to use SettingsIcon
   ],
   development: [
@@ -150,6 +149,9 @@ function MainLayout() {
 
   const getNavLinks = (role) => {
     let links = [...navLinkConfig.common];
+    if (role === "Employee" || !role) {
+      links.splice(2, 0, { path: "/my-leave", label: "My Leave", icon: Plane });
+    }
     if (role === "TeamLeader" || role === "Manager" || role === "Admin") {
       links = [...links, ...navLinkConfig.leaderManager];
     }
@@ -283,7 +285,9 @@ function MainLayout() {
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/my-schedule" element={<MySchedule />} />
-            <Route path="/my-leave" element={<MyLeave />} />
+            {(auth.user?.role === "Employee" || !auth.user?.role) && (
+              <Route path="/my-leave" element={<MyLeave />} />
+            )}
             <Route path="/my-attendance" element={<MyAttendance />} />
             <Route path="/profile" element={<MyProfile />} />
             <Route path="/leave-types" element={<LeaveConfiguration />} />

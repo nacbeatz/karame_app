@@ -21,11 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-// Helper hook to get auth token (replace with actual context)
-const useAuth = () => {
-  return { token: localStorage.getItem("authToken") };
-};
+import { useAuth } from "../App";
 
 function LeaveConfiguration() {
   const [leaveTypes, setLeaveTypes] = useState([]);
@@ -34,7 +30,7 @@ function LeaveConfiguration() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentLeaveType, setCurrentLeaveType] = useState(null); // For editing
   const [formData, setFormData] = useState({ name: '', description: '' });
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const API_URL = 'http://localhost:3001/api/leave-types'; // Adjust if needed
 
@@ -155,7 +151,9 @@ function LeaveConfiguration() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Leave Configuration</h2>
-        <Button onClick={handleAddClick}>Add New Leave Type</Button>
+        {user?.role === "Admin" && (
+          <Button onClick={handleAddClick}>Add New Leave Type</Button>
+        )}
       </div>
 
       {loading && <p>Loading leave types...</p>}

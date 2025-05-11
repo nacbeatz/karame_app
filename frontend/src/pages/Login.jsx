@@ -4,32 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Placeholder for authentication context or state management
-// In a real app, use Context API or Zustand/Redux for managing auth state
-const useAuth = () => {
-  // Replace with actual auth context logic
-  const login = (token) => {
-    localStorage.setItem('authToken', token);
-    console.log("Token stored");
-    // You might want to decode the token here to get user info like role
-  };
-  return { login };
-};
+import { useAuth } from "../App";
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth(); // Use the placeholder auth hook
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); // Clear previous errors
+    console.log('Attempting login for:', username);
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', { // Use your backend URL
+      const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,9 +28,9 @@ function LoginPage() {
       });
 
       const data = await response.json();
+      console.log('Login response:', data);
 
       if (!response.ok) {
-        // Handle errors (e.g., invalid credentials)
         setError(data.msg || 'Login failed. Please check your credentials.');
         return;
       }
@@ -48,14 +38,15 @@ function LoginPage() {
       // Login successful
       if (data.token) {
         login(data.token); // Store the token
-        console.log("Redirected to /dashboard");
+        console.log('Token stored, navigating to /dashboard');
         navigate('/dashboard'); // Redirect to dashboard or home page
       } else {
         setError('Login failed. No token received.');
+        console.error('No token received in login response');
       }
 
     } catch (err) {
-      console.error("Login fetch error:", err);
+      console.error('Login fetch error:', err);
       setError('An error occurred during login. Please try again.');
     }
   };
