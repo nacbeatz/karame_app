@@ -23,6 +23,7 @@ import AttendanceAdmin from "./pages/AttendanceAdmin.jsx";
 import Permissions from "./pages/Permissions.jsx";
 import Settings from "./pages/Settings.jsx";
 import MyAttendance from "./pages/MyAttendance.jsx";
+import ShiftType from "./pages/ShiftTemplatesPage.jsx"
 import "./App.css";
 
 // --- Authentication Context ---
@@ -122,6 +123,7 @@ const navLinkConfig = {
   ],
   admin: [
     { path: "/roles-permissions", label: "Permissions", icon: KeyRound },
+    { path: "/shift-template", label: "Shift Template", icon: KeyRound },
     { path: "/leave-types", label: "Leave Config", icon: Settings2 },
     { path: "/settings", label: "Settings", icon: SettingsIcon }, // Updated to use SettingsIcon
   ],
@@ -291,6 +293,7 @@ function MainLayout() {
             <Route path="/my-attendance" element={<MyAttendance />} />
             <Route path="/profile" element={<MyProfile />} />
             <Route path="/leave-types" element={<LeaveConfiguration />} />
+            <Route path="/shift-template" element={<ShiftType/>}/>
             {(auth.user?.role === "TeamLeader" || auth.user?.role === "Manager" || auth.user?.role === "Admin" || auth.user?.role === "HR") && (
               <>
                 <Route path="/team-schedule" element={<TeamSchedule />} />
